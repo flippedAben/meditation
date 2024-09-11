@@ -10,21 +10,61 @@ export default function Home() {
   const [log, setLog] = useState<[string, string][]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
-  function handleClick() {
-    const currentDateTime = new Date().toISOString();
-    sendLog(currentDateTime, "thought");
-    setLog((prevLog) => [...prevLog, [currentDateTime, "thought"]]);
-  }
+  useEffect(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    const speechRecognitionList = new (window.SpeechGrammarList ||
+      window.webkitSpeechGrammarList)();
+    const grammar =
+      "#JSGF V1.0; grammar commands; public <command> = thought | thinking";
+    speechRecognitionList.addFromString(grammar, 1);
+    recognition.grammars = speechRecognitionList;
+
+    recognitionRef.current = recognition;
+  }, []);
 
   function handleRecordingClick() {
     const currentDateTime = new Date().toISOString();
-    if (isRecording) {
+    let previouslyRecording = isRecording;
+    if (previouslyRecording) {
       sendLog(currentDateTime, "stop");
       setLog((prevLog) => [...prevLog, [currentDateTime, "stop"]]);
+      if (recognitionRef.current) {
+        recognitionRef.current.onend = () => {};
+        recognitionRef.current.stop();
+      }
     } else {
       sendLog(currentDateTime, "start");
       setLog((prevLog) => [...prevLog, [currentDateTime, "start"]]);
+      if (recognitionRef.current) {
+        recognitionRef.current.onend = () => {
+          console.log("onend: restarting recognition");
+          if (recognitionRef.current) {
+            recognitionRef.current.start();
+          }
+        };
+        recognitionRef.current.onresult = (event) => {
+          console.log("onresult");
+          const last = event.results.length - 1;
+          const command = event.results[last][0].transcript.trim();
+          if (
+            (command === "thought" || command === "thinking") &&
+            !previouslyRecording
+          ) {
+            const currentDateTime = new Date().toISOString();
+            sendLog(currentDateTime, "thought");
+            setLog((prevLog) => [...prevLog, [currentDateTime, "thought"]]);
+          }
+        };
+        recognitionRef.current.start();
+      }
     }
     setIsRecording((prevIsRecording) => !prevIsRecording);
   }
@@ -60,38 +100,9 @@ export default function Home() {
           </ul>
         </div>
       </main>
-      <div className="w-full">
-        <div className="flex flex-col gap-4">
-          <Button
-            onClick={handleClick}
-            className={`w-full text-xl h-24 ${
-              !isRecording ? "cursor-not-allowed" : ""
-            }`}
-            disabled={!isRecording}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-          </Button>
-          <Button
-            className="w-full text-xl h-24"
-            onClick={handleRecordingClick}
-          >
-            {isRecording ? <PauseIcon /> : <PlayIcon />}
-          </Button>
-        </div>
-      </div>
+      <Button className="w-full text-xl h-24" onClick={handleRecordingClick}>
+        {isRecording ? <PauseIcon /> : <PlayIcon />}
+      </Button>
     </div>
   );
 }
