@@ -11,6 +11,7 @@ export default function Home() {
   const [isRecording, setIsRecording] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const [wakeLock, setWakeLock] = useState<WakeLockSentinel | null>(null);
 
   useEffect(() => {
     const SpeechRecognition =
@@ -30,7 +31,29 @@ export default function Home() {
     recognitionRef.current = recognition;
   }, []);
 
-  function handleRecordingClick() {
+  async function acquireWakeLock() {
+    try {
+      const wakeLock = await navigator.wakeLock.request("screen");
+      setWakeLock(wakeLock);
+      console.log("Wake Lock acquired");
+    } catch (err) {
+      console.error(`Failed to acquire Wake Lock: ${err}`);
+    }
+  }
+
+  async function releaseWakeLock() {
+    if (wakeLock) {
+      try {
+        await wakeLock.release();
+        setWakeLock(null);
+        console.log("Wake Lock released");
+      } catch (err) {
+        console.error(`Failed to release Wake Lock: ${err}`);
+      }
+    }
+  }
+
+  async function handleRecordingClick() {
     const currentDateTime = new Date().toISOString();
     let previouslyRecording = isRecording;
     if (previouslyRecording) {
@@ -40,9 +63,12 @@ export default function Home() {
         recognitionRef.current.onend = () => {};
         recognitionRef.current.stop();
       }
+      await releaseWakeLock();
     } else {
       sendLog(currentDateTime, "start");
       setLog((prevLog) => [...prevLog, [currentDateTime, "start"]]);
+      await acquireWakeLock();
+
       if (recognitionRef.current) {
         recognitionRef.current.onend = () => {
           console.log("onend: restarting recognition");
