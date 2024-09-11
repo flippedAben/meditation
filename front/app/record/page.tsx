@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/front/components/ui/button";
 import { useState, useEffect, useRef } from "react";
 
 export default function Record() {
