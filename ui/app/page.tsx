@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
 import PlayIcon from "@/components/static/PlayIcon";
 import PauseIcon from "@/components/static/PauseIcon";
+import { sendLog } from "@/app/utils";
 
 export default function Home() {
   const [log, setLog] = useState<[string, string][]>([]);
@@ -12,14 +13,17 @@ export default function Home() {
 
   function handleClick() {
     const currentDateTime = new Date().toISOString();
+    sendLog(currentDateTime, "thought");
     setLog((prevLog) => [...prevLog, [currentDateTime, "thought"]]);
   }
 
   function handleRecordingClick() {
     const currentDateTime = new Date().toISOString();
     if (isRecording) {
+      sendLog(currentDateTime, "stop");
       setLog((prevLog) => [...prevLog, [currentDateTime, "stop"]]);
     } else {
+      sendLog(currentDateTime, "start");
       setLog((prevLog) => [...prevLog, [currentDateTime, "start"]]);
     }
     setIsRecording((prevIsRecording) => !prevIsRecording);
@@ -34,6 +38,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen p-8 gap-4 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+      {/* {`${process.env.NEXT_PUBLIC_API_URL}/log`} */}
       <main className="flex-grow overflow-hidden flex flex-col justify-end">
         <div
           ref={scrollContainerRef}
