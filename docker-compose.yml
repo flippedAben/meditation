@@ -1,0 +1,22 @@
+services:
+  ui:
+    container_name: ui
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    ports:
+      - 3000:3000
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DATA_PATH: ${DATA_PATH}
+      DATA_FILE_NAME: ${DATA_FILE_NAME}
+    volumes:
+      - ${HOST_DATA_PATH}:${DATA_PATH}
+    ports:
+      - 8080:8080 

@@ -1,4 +1,5 @@
 export function sendLog(datetime: string, event: string) {
+  console.log(`${process.env.NEXT_PUBLIC_API_URL}/log`);
   fetch(`${process.env.NEXT_PUBLIC_API_URL}/log`, {
     method: "POST",
     body: JSON.stringify({

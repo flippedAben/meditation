@@ -55,7 +55,7 @@ export default function Home() {
 
   async function handleRecordingClick() {
     const currentDateTime = new Date().toISOString();
-    let previouslyRecording = isRecording;
+    const previouslyRecording = isRecording;
     if (previouslyRecording) {
       sendLog(currentDateTime, "stop");
       setLog((prevLog) => [...prevLog, [currentDateTime, "stop"]]);
