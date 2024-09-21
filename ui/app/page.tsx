@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import PlayIcon from "@/components/static/PlayIcon";
 import PauseIcon from "@/components/static/PauseIcon";
 import { sendLog } from "@/app/utils";
+import useSound from "use-sound";
 
 export default function Home() {
   const [log, setLog] = useState<[string, string][]>([]);
@@ -12,6 +13,7 @@ export default function Home() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const [wakeLock, setWakeLock] = useState<WakeLockSentinel | null>(null);
+  const [playBell] = useSound("/audio/bell.mp3");
 
   useEffect(() => {
     const SpeechRecognition =
@@ -87,6 +89,7 @@ export default function Home() {
             const currentDateTime = new Date().toISOString();
             sendLog(currentDateTime, "thought");
             setLog((prevLog) => [...prevLog, [currentDateTime, "thought"]]);
+            playBell();
           }
         };
         recognitionRef.current.start();
