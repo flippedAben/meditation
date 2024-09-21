@@ -1,0 +1,18 @@
+services:
+  ui:
+    container_name: mediate-ui
+    image: ${UI_IMAGE}
+    ports:
+      - 3000:3000
+    restart: always
+  backend:
+    container_name: meditate-backend
+    image: ${BE_IMAGE}
+    environment:
+      DATA_PATH: ${DATA_PATH}
+      DATA_FILE_NAME: ${DATA_FILE_NAME}
+    volumes:
+      - ${HOST_DATA_PATH}:${DATA_PATH}
+    ports:
+      - 8080:8080 
+    restart: always

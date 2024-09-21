@@ -1,6 +1,6 @@
 services:
   ui:
-    container_name: ui
+    container_name: mediate-ui-dev
     build:
       context: ./ui
       dockerfile: Dockerfile
@@ -9,7 +9,7 @@ services:
     ports:
       - 3000:3000
   backend:
-    container_name: backend
+    container_name: meditate-backend-dev
     build:
       context: ./backend
       dockerfile: Dockerfile
