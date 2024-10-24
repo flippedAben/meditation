@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/a-h/templ"
 )
 
 type Log struct {
@@ -15,8 +17,14 @@ type Log struct {
 
 func main() {
 	mux := http.NewServeMux()
+
+	component := index("Hi")
+	mux.Handle("GET /", templ.Handler(component))
+
 	mux.HandleFunc("GET /log", getLog)
 	mux.HandleFunc("POST /log", postLog)
+
+	println("Service on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
