@@ -1,13 +1,4 @@
 services:
-  ui:
-    container_name: mediate-ui-dev
-    build:
-      context: ./ui
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-    ports:
-      - 3000:3000
   backend:
     container_name: meditate-backend-dev
     build:
