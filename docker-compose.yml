@@ -1,9 +1,7 @@
 services:
-  backend:
-    container_name: meditate 
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+  meditation:
+    container_name: meditation
+    image: ${IMAGE}
     environment:
       DATA_PATH: ${DATA_PATH}
       DATA_FILE_NAME: ${DATA_FILE_NAME}
@@ -11,3 +9,4 @@ services:
       - ${HOST_DATA_PATH}:${DATA_PATH}
     ports:
       - 8080:8080 
+    restart: always

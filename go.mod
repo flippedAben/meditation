@@ -1,4 +1,4 @@
-module tapsay/backend
+module meditation
 
 go 1.23.0
 
