@@ -6,7 +6,7 @@ templ index() {
         <head>
             <meta charset="UTF-8"/>
             <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-            <title>Meditate logging</title>
+            <title>Record</title>
             <script src="https://unpkg.com/htmx.org@2.0.3"></script>
             <script>
                 let recognition = null;
@@ -105,8 +105,19 @@ templ index() {
                 document.addEventListener('DOMContentLoaded', setupSpeechRecognition);
             </script>
             <style>
-                .container { max-width: 800px; margin: 0 auto; padding: 20px; }
-                .logs { height: calc(100vh - 200px); overflow-y: auto; }
+                body {
+                    background-color: #000000;
+                    color: #ffffff;
+                }
+                .container { 
+                    max-width: 800px; 
+                    margin: 0 auto; 
+                    padding: 20px; 
+                }
+                .logs { 
+                    height: calc(100vh - 200px); 
+                    overflow-y: auto; 
+                }
                 .record-btn { 
                     width: 100%; 
                     height: 96px; 
@@ -125,11 +136,23 @@ templ index() {
                     margin-bottom: 4px;
                     font-family: monospace;
                 }
+                #log-list {
+                    list-style-type: none;
+                    padding: 0;
+                    margin: 0;
+                }
+                .scrollbar-hide {
+                    -ms-overflow-style: none;  /* IE and Edge */
+                    scrollbar-width: none;  /* Firefox */
+                }
+                .scrollbar-hide::-webkit-scrollbar {
+                    display: none;  /* Chrome, Safari and Opera */
+                }
             </style>
         </head>
         <body class="container">
-            <div id="log-section" class="logs">
-                <ul id="log-list" class="list-none p-0">
+            <div id="log-section" class="logs scrollbar-hide">
+                <ul id="log-list">
                     // Empty list that will be populated by JavaScript
                 </ul>
             </div>
