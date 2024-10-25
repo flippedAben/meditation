@@ -24,7 +24,7 @@ func main() {
 	mux.HandleFunc("POST /log", postLog)
 
 	fs := http.FileServer(http.Dir("static"))
-	mux.Handle("GET /audio/*", http.StripPrefix("/audio/", fs))
+	mux.Handle("GET /static/", http.StripPrefix("/static/", fs))
 
 	println("Service on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
@@ -71,6 +71,5 @@ func postLog(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
 }

@@ -22,7 +22,7 @@ templ index() {
                     const logList = document.querySelector('#log-list');
                     const li = document.createElement('li');
                     li.className = 'log-entry';
-                    li.innerHTML = `<span class="timestamp">${displayedTimestamp}</span>: ${event}`;
+                    li.innerHTML = `${displayedTimestamp}: ${event}`;
                     logList.appendChild(li);
                     
                     // Scroll to bottom
@@ -47,7 +47,7 @@ templ index() {
                         const command = event.results[last][0].transcript.trim();
                         if (command === 'thought' || command === 'thinking') {
                             addLog('thought');
-                            new Audio('/audio/bell.mp3').play();
+                            new Audio('/static/audio/bell.mp3').play();
                         }
                     };
 
@@ -123,8 +123,6 @@ templ index() {
                 }
                 .log-entry {
                     margin-bottom: 4px;
-                }
-                .timestamp {
                     font-family: monospace;
                 }
             </style>
