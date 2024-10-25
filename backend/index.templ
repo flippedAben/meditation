@@ -163,12 +163,19 @@ templ index() {
                 onclick="
                     const isRecording = this.getAttribute('data-recording') === 'true';
                     this.setAttribute('data-recording', !isRecording);
+
+                    const playIcon = document.getElementById('play-icon');
+                    const pauseIcon = document.getElementById('pause-icon');
                     
                     if (!isRecording) {
+                        playIcon.style.display = 'none';
+                        pauseIcon.style.display = 'inline';
                         addLog('start');
                         recognition.start();
                         acquireWakeLock();
                     } else {
+                        playIcon.style.display = 'inline';
+                        pauseIcon.style.display = 'none';
                         addLog('stop');
                         recognition.stop();
                         releaseWakeLock();
