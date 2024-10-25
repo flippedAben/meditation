@@ -1,3 +1,6 @@
-backend/data/**
+*_templ.go
+*_templ.txt
+
+data/**
 .env*
 *.sh

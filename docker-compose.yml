@@ -1,6 +1,6 @@
 services:
   backend:
-    container_name: meditate-backend-dev
+    container_name: meditate 
     build:
       context: ./backend
       dockerfile: Dockerfile
