@@ -18,30 +18,33 @@ type Log struct {
 func main() {
 	mux := http.NewServeMux()
 
-	component := index("Hi")
+	component := index()
 	mux.Handle("GET /", templ.Handler(component))
 
-	mux.HandleFunc("GET /log", getLog)
 	mux.HandleFunc("POST /log", postLog)
+
+	fs := http.FileServer(http.Dir("static"))
+	mux.Handle("GET /audio/*", http.StripPrefix("/audio/", fs))
 
 	println("Service on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
-func getLog(w http.ResponseWriter, r *http.Request) {
-	path := fmt.Sprintf("%s/%s", os.Getenv("DATA_PATH"), os.Getenv("DATA_FILE_NAME"))
-	http.ServeFile(w, r, path)
-}
-
 func postLog(w http.ResponseWriter, r *http.Request) {
-	path := fmt.Sprintf("%s/%s", os.Getenv("DATA_PATH"), os.Getenv("DATA_FILE_NAME"))
-	var log Log
-	err := json.NewDecoder(r.Body).Decode(&log)
-	if err != nil {
-		http.Error(w, "Failed to parse JSON request", http.StatusInternalServerError)
+	// path := fmt.Sprintf("%s/%s", os.Getenv("DATA_PATH"), os.Getenv("DATA_FILE_NAME"))
+	path := fmt.Sprintf("%s/%s", "data/", "meditation.txt")
+
+	request_logs := r.FormValue("logs")
+	if request_logs == "" {
+		http.Error(w, "No logs provided", http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
+
+	var logs []Log
+	if err := json.Unmarshal([]byte(request_logs), &logs); err != nil {
+		http.Error(w, "Invalid logs format", http.StatusBadRequest)
+		return
+	}
 
 	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -50,24 +53,24 @@ func postLog(w http.ResponseWriter, r *http.Request) {
 	}
 	defer f.Close()
 
-	bytes, err := json.Marshal(log)
-	if err != nil {
-		http.Error(w, "Failed to marshal JSON", http.StatusInternalServerError)
-		return
+	for _, log := range logs {
+		bytes, err := json.Marshal(log)
+		if err != nil {
+			http.Error(w, "Failed to read json", http.StatusInternalServerError)
+			return
+		}
+
+		if _, err := f.Write(bytes); err != nil {
+			http.Error(w, "Failed to write data to log file", http.StatusInternalServerError)
+			return
+		}
+
+		if _, err := f.Write([]byte("\n")); err != nil {
+			http.Error(w, "Failed to write new line to log file", http.StatusInternalServerError)
+			return
+		}
 	}
 
-	_, err = f.Write(bytes)
-	if err != nil {
-		http.Error(w, "Failed to write data to log file", http.StatusInternalServerError)
-		return
-	}
-
-	_, err = f.Write([]byte("\n"))
-	if err != nil {
-		http.Error(w, "Failed to write new line to log file", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	// w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
 }

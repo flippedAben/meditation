@@ -1,5 +1,169 @@
 package main
 
-templ index(name string) {
-    <div>Hello, { name }</div>
+templ index() {
+    <!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <meta charset="UTF-8"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+            <title>Meditate logging</title>
+            <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+            <script>
+                let recognition = null;
+                let wakeLock = null;
+                let pendingLogs = [];
+
+                function addLog(event) {
+                    const timestamp = new Date();
+                    pendingLogs.push({ timestamp, event });
+                    
+                    // Update UI by adding new log entry
+                    const displayedTimestamp = timestamp.toISOString().replace('T', ' ').slice(0, 19);
+                    const logList = document.querySelector('#log-list');
+                    const li = document.createElement('li');
+                    li.className = 'log-entry';
+                    li.innerHTML = `<span class="timestamp">${displayedTimestamp}</span>: ${event}`;
+                    logList.appendChild(li);
+                    
+                    // Scroll to bottom
+                    const logSection = document.querySelector('#log-section');
+                    logSection.scrollTop = logSection.scrollHeight;
+                }
+
+                function setupSpeechRecognition() {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    recognition = new SpeechRecognition();
+                    recognition.lang = 'en-US';
+                    recognition.continuous = true;
+                    recognition.interimResults = false;
+
+                    const speechRecognitionList = new (window.SpeechGrammarList || window.webkitSpeechGrammarList)();
+                    const grammar = '#JSGF V1.0; grammar commands; public <command> = thought | thinking';
+                    speechRecognitionList.addFromString(grammar, 1);
+                    recognition.grammars = speechRecognitionList;
+
+                    recognition.onresult = (event) => {
+                        const last = event.results.length - 1;
+                        const command = event.results[last][0].transcript.trim();
+                        if (command === 'thought' || command === 'thinking') {
+                            addLog('thought');
+                            new Audio('/audio/bell.mp3').play();
+                        }
+                    };
+
+                    recognition.onend = () => {
+                        if (document.getElementById('recording-btn').getAttribute('data-recording') === 'true') {
+                            recognition.start();
+                        }
+                    };
+                }
+
+                async function acquireWakeLock() {
+                    try {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                        console.log('Wake Lock acquired');
+                    } catch (err) {
+                        console.error(`Failed to acquire Wake Lock: ${err}`);
+                    }
+                }
+
+                async function releaseWakeLock() {
+                    if (wakeLock) {
+                        try {
+                            await wakeLock.release();
+                            wakeLock = null;
+                            console.log('Wake Lock released');
+                        } catch (err) {
+                            console.error(`Failed to release Wake Lock: ${err}`);
+                        }
+                    }
+                }
+
+                async function submitBatchedLogs() {
+                    if (pendingLogs.length === 0) return;
+                    
+                    const formData = new FormData();
+                    formData.append('logs', JSON.stringify(pendingLogs));
+                    
+                    try {
+                        const response = await fetch('/log', {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'HX-Request': 'true' // TODO: what does this do
+                            }
+                        });
+                        
+                        if (!response.ok) {
+                            console.error('Failed to submit logs');
+                        }
+                    } catch (err) {
+                        console.error('Error submitting logs:', err);
+                    }
+                }
+
+                document.addEventListener('DOMContentLoaded', setupSpeechRecognition);
+            </script>
+            <style>
+                .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+                .logs { height: calc(100vh - 200px); overflow-y: auto; }
+                .record-btn { 
+                    width: 100%; 
+                    height: 96px; 
+                    font-size: 1.25rem; 
+                    margin-top: 16px;
+                    background-color: #2563eb;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+                .record-btn:hover {
+                    background-color: #1d4ed8;
+                }
+                .log-entry {
+                    margin-bottom: 4px;
+                }
+                .timestamp {
+                    font-family: monospace;
+                }
+            </style>
+        </head>
+        <body class="container">
+            <div id="log-section" class="logs">
+                <ul id="log-list" class="list-none p-0">
+                    // Empty list that will be populated by JavaScript
+                </ul>
+            </div>
+
+            <button
+                id="recording-btn"
+                class="record-btn"
+                onclick="
+                    const isRecording = this.getAttribute('data-recording') === 'true';
+                    this.setAttribute('data-recording', !isRecording);
+                    
+                    if (!isRecording) {
+                        addLog('start');
+                        recognition.start();
+                        acquireWakeLock();
+                    } else {
+                        addLog('stop');
+                        recognition.stop();
+                        releaseWakeLock();
+                        submitBatchedLogs();
+                    }
+                "
+                data-recording="false"
+            >
+                <svg id="play-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <svg id="pause-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                    <rect x="6" y="4" width="4" height="16"></rect>
+                    <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+            </button>
+        </body>
+    </html>
 }
