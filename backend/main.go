@@ -31,8 +31,7 @@ func main() {
 }
 
 func postLog(w http.ResponseWriter, r *http.Request) {
-	// path := fmt.Sprintf("%s/%s", os.Getenv("DATA_PATH"), os.Getenv("DATA_FILE_NAME"))
-	path := fmt.Sprintf("%s/%s", "data/", "meditation.txt")
+	path := fmt.Sprintf("%s/%s", os.Getenv("DATA_PATH"), os.Getenv("DATA_FILE_NAME"))
 
 	request_logs := r.FormValue("logs")
 	if request_logs == "" {
